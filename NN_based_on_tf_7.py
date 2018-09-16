@@ -3,6 +3,7 @@ import math
 import csv
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib import patches as mpatches
 from sklearn import preprocessing
 import tensorflow as tf
 from tensorflow import keras
@@ -17,7 +18,7 @@ Q3 = []
 posX = []
 posY = []
 titaEnd = []
-samples = 5000
+samples = 1000
 
 def Xe (a,b,c):                 # return the X,Y,Tita for a given 2 joint angles
     return linkLength*math.cos(a)+linkLength*math.cos(a+b)+linkLength*math.cos(a+b+c)
@@ -29,9 +30,9 @@ def tita (h,i,j):
 def build_model():              # NN Model
     model = keras.Sequential()
     #model.add(keras.layers.Dense(3))
-    model.add(keras.layers.Dense(100, activation='tanh'))
-    model.add(keras.layers.Dense(100, activation='tanh'))
-    model.add(keras.layers.Dense(3, activation='linear'))
+    #model.add(keras.layers.Dense(100,use_bias=True, activation='tanh'))
+    model.add(keras.layers.Dense(100,use_bias=True, activation='tanh'))
+    model.add(keras.layers.Dense(3,use_bias=True, activation='linear'))
     model.compile(optimizer=tf.train.AdamOptimizer(0.01), loss='mse', metrics=['accuracy'])  # mean squared error
     return model
 def plot_history(history):      # Track the history
@@ -155,7 +156,7 @@ tensorboard = TensorBoard(log_dir="logs/{}".format(NAME))           # Create    
 model =  build_model()                                              # Building the model
 
 
-history = model.fit(dataX,dataY, nb_epoch=100, callbacks=[tensorboard])    #train the model
+history = model.fit(dataX,dataY, nb_epoch=500, callbacks=[tensorboard])    #train the model
 
 [loss,mae] =model.evaluate(dataX_test,dataY_test,verbose=0)        #evaluation
 
@@ -194,7 +195,7 @@ print("*********************************")
                                                                                 #Output - Joint angles (Q1,Q2,Q3)
 Xc = 3
 Yc = 2
-r = 1
+r = 2
 data_points =100
 
 Input_Circle = np.zeros((data_points,3),float)
@@ -209,7 +210,7 @@ tagectory =[]
 for i in range (0,len(titaz)):
      Input_Circle[i][0]=Xc + r*math.cos(np.radians(titaz[i]))
      Input_Circle[i][1]=Yc + r*math.sin(np.radians(titaz[i]))
-     Input_Circle[i][2]= 0
+     Input_Circle[i][2]= 60
 
 
 
@@ -234,21 +235,50 @@ inin[0][2]=Input_Circle[0,2]
 Predicted_cordinates =np.zeros((data_points,3),float)
 print(np.shape(Input_Circle))
 
-single_data_1 = np.array(Input_Circle)
-single_data = x_scaler.transform(single_data_1)
-single_prediction = model.predict(single_data)
-single_real_prediction = y_scaler.inverse_transform(single_prediction)
+
 
 print(single_data_1[0,0]," ",single_data_1[0,1])
 print(Xe(single_real_prediction[0,0],single_real_prediction[0,1],single_real_prediction[0,2])," ",Ye(single_real_prediction[0,0],single_real_prediction[0,1],single_real_prediction[0,2]) )
 print("*****************!***************")
 
+Joint_angle_predict = np.zeros((data_points,4),float)
+
 
 for q in range(0,data_points):
-    Predicted_cordinates[q][0]= Xe(single_real_prediction[q,0],single_real_prediction[q,1],single_real_prediction[q,2])
-    Predicted_cordinates[q][1]= Ye(single_real_prediction[q,0],single_real_prediction[q,1],single_real_prediction[q,2])
+    single_data_1 = np.array([[Input_Circle[q,0],Input_Circle[q,1],Input_Circle[q,2]]])
+    single_data = x_scaler.transform(single_data_1)
+    single_prediction = model.predict(single_data)
+    single_real_prediction = y_scaler.inverse_transform(single_prediction)
 
-plt.scatter(Predicted_cordinates[:,0],Predicted_cordinates[:,1],c='r')
+    X_hat=Xe(single_real_prediction[0, 0], single_real_prediction[0, 1], single_real_prediction[0, 2])
+    Y_hat=Ye(single_real_prediction[0, 0], single_real_prediction[0, 1], single_real_prediction[0, 2])
+    Tita_hat=tita(single_real_prediction[0, 0], single_real_prediction[0, 1], single_real_prediction[0, 2])
+
+
+    Joint_angle_predict[q][0] = q
+    Joint_angle_predict[q][1] = single_real_prediction[0,0]
+    Joint_angle_predict[q][2] = single_real_prediction[0, 1]
+    Joint_angle_predict[q][3] = single_real_prediction[0, 2]
+
+
+
+    print("X: ",Input_Circle[q, 0]," Y: ",Input_Circle[q, 1]," Tita: ",Input_Circle[q, 2])
+    print("X^:",X_hat, " Y^:",Y_hat," Tita^:",Tita_hat )
+    print(" ")
+    plt.scatter(X_hat,Y_hat,c='r')
+
+#plt.scatter(Predicted_cordinates[:,0],Predicted_cordinates[:,1],c='r')
+plt.show()
+
+
+Q1_patch =mpatches.Patch(color='red',label='1st joint')
+Q2_patch =mpatches.Patch(color='blue',label='2st joint')
+Q3_patch =mpatches.Patch(color='green',label='3st joint')
+
+plt.plot(Joint_angle_predict[:,0],Joint_angle_predict[:,1],c='r')
+plt.plot(Joint_angle_predict[:,0],Joint_angle_predict[:,2],c='b')
+plt.plot(Joint_angle_predict[:,0],Joint_angle_predict[:,3],c='g')
+plt.legend(handles =[Q1_patch,Q2_patch,Q3_patch])
 plt.show()
 
 #print(Xe(Real_Prediction[0,0],Real_Prediction[0,1],Real_Prediction[0,2])," ",Ye(Real_Prediction[0,0],Real_Prediction[0,1],Real_Prediction[0,2]))
