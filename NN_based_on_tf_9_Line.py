@@ -199,8 +199,8 @@ print("*********************************")
 
                                                                                 #inputs to the network - End efector positions(X and Y) and orientation
                                                                                 #Output - Joint angles (Q1,Q2,Q3)
-Xc = 3
-Yc = 2
+Xc = 0
+Yc = 0
 r = 2
 data_points =100
 
@@ -208,15 +208,15 @@ Input_Circle = np.zeros((data_points,3),float)
 Output_Circle = np.zeros((data_points,3),float)
 Single_input = np.zeros((1,3),float)
 
-titaz = np.linspace(5,180,num =data_points)
+titaz = np.linspace(0,6,num =data_points)
 
 
 tagectory =[]
 
 for i in range (0,len(titaz)):
-     Input_Circle[i][0]=Xc + r*math.cos(np.radians(titaz[i]))
-     Input_Circle[i][1]=Yc + r*math.sin(np.radians(titaz[i]))
-     Input_Circle[i][2]= 60
+     Input_Circle[i][0]=Xc + titaz[i]
+     Input_Circle[i][1]=Yc + titaz[i]
+     Input_Circle[i][2]= 90
 
 
 plt.clf()
