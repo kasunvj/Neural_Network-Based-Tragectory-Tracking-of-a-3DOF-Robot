@@ -18,7 +18,7 @@ Q3 = []
 posX = []
 posY = []
 titaEnd = []
-samples = 1000
+samples = 5000
 
 def Xe (a,b,c):                 # return the X,Y,Tita for a given 2 joint angles
     return linkLength*math.cos(a)+linkLength*math.cos(a+b)+linkLength*math.cos(a+b+c)
