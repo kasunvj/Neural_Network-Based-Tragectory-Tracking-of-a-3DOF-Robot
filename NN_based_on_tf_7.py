@@ -208,7 +208,7 @@ Input_Circle = np.zeros((data_points,3),float)
 Output_Circle = np.zeros((data_points,3),float)
 Single_input = np.zeros((1,3),float)
 
-titaz = np.linspace(5,180,num =data_points)
+titaz = np.linspace(5,360,num =data_points)
 
 
 tagectory =[]
@@ -251,12 +251,31 @@ Joint_angle_predict = np.zeros((data_points,4),float)
 Error = np.zeros((data_points,7),float)
 
 Tita_hat= 0;
+penalty =0;
+rounds= 0;
 
 for q in range(0,data_points):
     single_data_1 = np.array([[Input_Circle[q,0],Input_Circle[q,1],Input_Circle[q, 2]]])
     single_data = x_scaler.transform(single_data_1)
     single_prediction = model.predict(single_data)
     single_real_prediction = y_scaler.inverse_transform(single_prediction)
+
+    if (math.degrees(single_real_prediction[0,0]) > 0) or (math.degrees(single_real_prediction[0,0]) <180):
+        if (math.degrees(single_real_prediction[0,0]) < 0) or (math.degrees(single_real_prediction[0,0]) > -180):
+            if (math.degrees(single_real_prediction[0,0]) >-90) or (math.degrees(single_real_prediction[0,0]) < 90):
+                q=q
+            else:
+                q=q-1
+                penalty = penalty+1
+        else:
+            q=q-1
+            penalty = penalty + 1
+            break
+    else:
+        q=q-1
+        penalty = penalty + 1
+        break
+
 
     X_hat=Xe(single_real_prediction[0, 0], single_real_prediction[0, 1], single_real_prediction[0, 2])
     Y_hat=Ye(single_real_prediction[0, 0], single_real_prediction[0, 1], single_real_prediction[0, 2])
@@ -278,10 +297,37 @@ for q in range(0,data_points):
 
 
 
-    print("X: ",Input_Circle[q, 0]," Y: ",Input_Circle[q, 1]," Tita: ",Input_Circle[q, 2])
-    print("X^:",X_hat, " Y^:",Y_hat," Tita^:",Tita_hat )
-    print(" ")
-    plt.scatter(X_hat,Y_hat,c='r')
+    if (Error[q,3] > 0) and ( Error[q,3] <180):
+        if (Error[q,4] < 0) and (Error[q,4] > -180):
+            if (Error[q,5] >-90) and (Error[q,5] < 90):
+                print(q)
+                print("X: ", Input_Circle[q, 0], " Y: ", Input_Circle[q, 1], " Tita: ", Input_Circle[q, 2])
+                print("X^:", X_hat, " Y^:", Y_hat, " Tita^:", Tita_hat)
+                print("Q1:", Error[q, 3], " Q2:", Error[q, 4], "Q3:", Error[q, 5])
+                print(" ")
+                if (q == 0):
+                    plt.scatter(X_hat, Y_hat, c='g')
+                elif (q == 1):
+                    plt.scatter(X_hat, Y_hat, c='y')
+                else:
+                    plt.scatter(X_hat, Y_hat, c='r')
+
+            else:
+                q=q-1
+                penalty = penalty+1
+        else:
+            q=q-1
+            penalty = penalty + 1
+
+    else:
+        q=q-1
+        penalty = penalty + 1
+
+
+    rounds =rounds+1
+
+print("penaltys :",penalty)
+print("total Rounds:",rounds)
 
 #plt.scatter(Predicted_cordinates[:,0],Predicted_cordinates[:,1],c='r')
 #plt.show( block = False )
