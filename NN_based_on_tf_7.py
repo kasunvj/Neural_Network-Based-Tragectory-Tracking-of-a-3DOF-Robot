@@ -18,7 +18,7 @@ Q3 = []
 posX = []
 posY = []
 titaEnd = []
-samples = 5000
+samples = 1000
 
 def Xe (a,b,c):                 # return the X,Y,Tita for a given 2 joint angles
     return linkLength*math.cos(a)+linkLength*math.cos(a+b)+linkLength*math.cos(a+b+c)
@@ -208,7 +208,7 @@ Input_Circle = np.zeros((data_points,3),float)
 Output_Circle = np.zeros((data_points,3),float)
 Single_input = np.zeros((1,3),float)
 
-titaz = np.linspace(5,360,num =data_points)
+titaz = np.linspace(5,180,num =data_points)
 
 
 tagectory =[]
@@ -260,22 +260,6 @@ for q in range(0,data_points):
     single_prediction = model.predict(single_data)
     single_real_prediction = y_scaler.inverse_transform(single_prediction)
 
-    if (math.degrees(single_real_prediction[0,0]) > 0) or (math.degrees(single_real_prediction[0,0]) <180):
-        if (math.degrees(single_real_prediction[0,0]) < 0) or (math.degrees(single_real_prediction[0,0]) > -180):
-            if (math.degrees(single_real_prediction[0,0]) >-90) or (math.degrees(single_real_prediction[0,0]) < 90):
-                q=q
-            else:
-                q=q-1
-                penalty = penalty+1
-        else:
-            q=q-1
-            penalty = penalty + 1
-            break
-    else:
-        q=q-1
-        penalty = penalty + 1
-        break
-
 
     X_hat=Xe(single_real_prediction[0, 0], single_real_prediction[0, 1], single_real_prediction[0, 2])
     Y_hat=Ye(single_real_prediction[0, 0], single_real_prediction[0, 1], single_real_prediction[0, 2])
@@ -311,6 +295,7 @@ for q in range(0,data_points):
                     plt.scatter(X_hat, Y_hat, c='y')
                 else:
                     plt.scatter(X_hat, Y_hat, c='r')
+                    plt.pause(0.05)
 
             else:
                 q=q-1
@@ -330,7 +315,7 @@ print("penaltys :",penalty)
 print("total Rounds:",rounds)
 
 #plt.scatter(Predicted_cordinates[:,0],Predicted_cordinates[:,1],c='r')
-#plt.show( block = False )
+plt.show()
 
 plt.savefig('Desired Tragectory Cordinates and  Predicted.png')
 
