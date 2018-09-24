@@ -1,11 +1,13 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import tensorflow as tf
 
-plt.axis([0, 10, 0, 1])
+a = tf.placeholder(tf.int16)
+b = tf.placeholder(tf.int16)
 
-for i in range(10):
-    y = np.random.random()
-    plt.scatter(i, y)
-    plt.pause(0.05)
+addition = tf.add(a,b)
 
-plt.show()
+
+with tf.Session() as sess:
+    sess.run(init)
+    print("addition: ",addition,"-",sess.run(addition,feed_dict={a:2,b:3)))
+
+sess.close()

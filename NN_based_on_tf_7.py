@@ -29,8 +29,9 @@ def tita (h,i,j):
 
 def build_model():              # NN Model
     model = keras.Sequential()
-    #model.add(keras.layers.Dense(3))
+    model.add(keras.layers.Dense(3))
     #model.add(keras.layers.Dense(100,use_bias=True, activation='tanh'))
+    #model.add(keras.layers.Dense(100, use_bias=True, activation='tanh'))
     model.add(keras.layers.Dense(100,use_bias=True, activation='tanh'))
     model.add(keras.layers.Dense(3,use_bias=True, activation='linear'))
     model.compile(optimizer=tf.train.AdamOptimizer(0.05), loss=keras.losses.mean_squared_error, metrics=['accuracy'])  # mean squared error
@@ -156,12 +157,8 @@ NAME = "Trajectry Tracking"
 tensorboard = TensorBoard(log_dir="logs/{}".format(NAME))           # Create    callbacks for tensorboard visualizations
 
 model =  build_model()                                              # Building the model
-
-
 history = model.fit(dataX,dataY, nb_epoch=100, callbacks=[tensorboard])    #train the model
-
 [loss,mae] =model.evaluate(dataX_test,dataY_test,verbose=0)        #evaluation
-
 print("Testing set Mean Abs Error: ${:7.2f}".format(mae))
 
 
@@ -201,22 +198,22 @@ print("*********************************")
                                                                                 #Output - Joint angles (Q1,Q2,Q3)
 Xc = 3
 Yc = 2
-r = 2
+r = 1
 data_points =100
 
+#Circle
 Input_Circle = np.zeros((data_points,3),float)
 Output_Circle = np.zeros((data_points,3),float)
 Single_input = np.zeros((1,3),float)
-
-titaz = np.linspace(5,180,num =data_points)
-
-
+titaz = np.linspace(0,360,num =data_points)
 tagectory =[]
-
 for i in range (0,len(titaz)):
      Input_Circle[i][0]=Xc + r*math.cos(np.radians(titaz[i]))
      Input_Circle[i][1]=Yc + r*math.sin(np.radians(titaz[i]))
-     Input_Circle[i][2]= 60
+     Input_Circle[i][2]= math.degrees(math.atan(Input_Circle[i,1]/Input_Circle[i,0]))
+
+
+#line
 
 
 plt.clf()
@@ -250,11 +247,15 @@ print("*****************!***************")
 Joint_angle_predict = np.zeros((data_points,4),float)
 Error = np.zeros((data_points,7),float)
 
-Tita_hat= 0;
-penalty =0;
-rounds= 0;
+Tita_hat= 0
+penalty =0
+rounds= 0
 
-for q in range(0,data_points):
+correct_predictions = 0
+q = 0
+misses = 0
+
+while (correct_predictions < data_points):
     single_data_1 = np.array([[Input_Circle[q,0],Input_Circle[q,1],Input_Circle[q, 2]]])
     single_data = x_scaler.transform(single_data_1)
     single_prediction = model.predict(single_data)
@@ -266,10 +267,11 @@ for q in range(0,data_points):
     Tita_hat=tita(single_real_prediction[0, 0], single_real_prediction[0, 1], single_real_prediction[0, 2])
 
 
+
     Joint_angle_predict[q][0] = q
-    Joint_angle_predict[q][1] = single_real_prediction[0,0]
-    Joint_angle_predict[q][2] = single_real_prediction[0, 1]
-    Joint_angle_predict[q][3] = single_real_prediction[0, 2]
+    Joint_angle_predict[q][1] = math.degrees(single_real_prediction[0,0])
+    Joint_angle_predict[q][2] = math.degrees(single_real_prediction[0, 1])
+    Joint_angle_predict[q][3] = math.degrees(single_real_prediction[0, 2])
 
     Error[q][0] = Input_Circle[q, 0] - X_hat
     Error[q][1] = Input_Circle[q, 1] - Y_hat
@@ -284,38 +286,66 @@ for q in range(0,data_points):
     if (Error[q,3] > 0) and ( Error[q,3] <180):
         if (Error[q,4] < 0) and (Error[q,4] > -180):
             if (Error[q,5] >-90) and (Error[q,5] < 90):
-                print(q)
+                print(q, "tries:",misses)
+                misses =0
                 print("X: ", Input_Circle[q, 0], " Y: ", Input_Circle[q, 1], " Tita: ", Input_Circle[q, 2])
                 print("X^:", X_hat, " Y^:", Y_hat, " Tita^:", Tita_hat)
                 print("Q1:", Error[q, 3], " Q2:", Error[q, 4], "Q3:", Error[q, 5])
                 print(" ")
+                correct_predictions = correct_predictions+1
+
                 if (q == 0):
                     plt.scatter(X_hat, Y_hat, c='g')
                 elif (q == 1):
                     plt.scatter(X_hat, Y_hat, c='y')
                 else:
                     plt.scatter(X_hat, Y_hat, c='r')
+                    x1 = linkLength*math.cos(np.radians(Error[q,3]))
+                    y1 = linkLength*math.sin(np.radians(Error[q,3]))
+                    x2 = linkLength*math.cos(np.radians(Error[q,3]+Error[q,4]))
+                    y2 = linkLength*math.sin(np.radians(Error[q,3]+Error[q,4]))
+                    x3 = linkLength*math.cos(np.radians(Error[q,3]+Error[q,4]+Error[q,5]))
+                    y3 = linkLength*math.sin(np.radians(Error[q,3]+Error[q,4]+Error[q,5]))
+                    plt.scatter(X_hat, Y_hat, c='r')
+
+                    plt.plot([0,x1],[0,y1],'-k')
+                    plt.plot([x1,x1+x2],[y1,y1+y2],'-k')
+                    plt.plot([x1+x2,x1+x2+x3],[y1+y2,y1+y2+y3],'-k')
+
                     plt.pause(0.05)
+                q = q + 1
 
             else:
-                q=q-1
-                penalty = penalty+1
+                misses =misses+1
+                if (misses == 1):
+                    print("trying to Solve Q3", Error[q, 5])
+
         else:
-            q=q-1
-            penalty = penalty + 1
+            misses = misses+1
+            if (misses == 1):
+                print("trying to Solve Q2", Error[q, 4])
 
     else:
-        q=q-1
-        penalty = penalty + 1
+        misses =misses+1
+        if (misses ==1):
+            print("trying to Solve Q1", Error[q, 3])
 
 
-    rounds =rounds+1
+    if (misses >500) :
+        print("cant solve point X:",round(Input_Circle[q,0],2)," Y:",round(Input_Circle[q,1],2),"Tita:",round(Input_Circle[q,2],2))
+        q=q+1
+        correct_predictions = correct_predictions + 1
+        misses=0
+
+
+
+
 
 print("penaltys :",penalty)
 print("total Rounds:",rounds)
 
 #plt.scatter(Predicted_cordinates[:,0],Predicted_cordinates[:,1],c='r')
-plt.show()
+#plt.show()
 
 plt.savefig('Desired Tragectory Cordinates and  Predicted.png')
 
@@ -331,7 +361,7 @@ plt.plot(Joint_angle_predict[:,0],Joint_angle_predict[:,2],c='b')
 plt.plot(Joint_angle_predict[:,0],Joint_angle_predict[:,3],c='g')
 plt.legend(handles =[Q1_patch,Q2_patch,Q3_patch])
 plt.title('Joint angle variation over data points')
-#plt.show( block = False )
+plt.show( block = False )
 
 plt.savefig('Joint angle variation over data points.png')
 
