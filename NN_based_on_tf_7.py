@@ -8,7 +8,7 @@ from sklearn import preprocessing
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
-
+import keras.backend as K
 
 linkLength = 2
 
@@ -19,6 +19,9 @@ posX = []
 posY = []
 titaEnd = []
 samples = 1000
+
+def customloss (yTrue,yPred):
+    return K.sum((yTrue - yPred)**2)
 
 def Xe (a,b,c):                 # return the X,Y,Tita for a given 2 joint angles
     return linkLength*math.cos(a)+linkLength*math.cos(a+b)+linkLength*math.cos(a+b+c)
@@ -34,7 +37,7 @@ def build_model():              # NN Model
     #model.add(keras.layers.Dense(100, use_bias=True, activation='tanh'))
     model.add(keras.layers.Dense(100,use_bias=True, activation='tanh'))
     model.add(keras.layers.Dense(3,use_bias=True, activation='linear'))
-    model.compile(optimizer=tf.train.AdamOptimizer(0.05), loss=keras.losses.mean_squared_error, metrics=['accuracy'])  # mean squared error
+    model.compile(optimizer=tf.train.AdamOptimizer(0.05), loss=customloss, metrics=['accuracy'])  # mean squared error
     return model
 def plot_history(history):      # Track the history
     plt.figure()
@@ -210,8 +213,8 @@ tagectory =[]
 for i in range (0,len(titaz)):
      Input_Circle[i][0]=Xc + r*math.cos(np.radians(titaz[i]))
      Input_Circle[i][1]=Yc + r*math.sin(np.radians(titaz[i]))
-     Input_Circle[i][2]= math.degrees(math.atan(Input_Circle[i,1]/Input_Circle[i,0]))
-
+     #Input_Circle[i][2]= math.degrees(math.atan(Input_Circle[i,1]/Input_Circle[i,0]))
+     Input_Circle[i][2] = 60
 
 #line
 
