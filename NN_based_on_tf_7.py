@@ -204,7 +204,7 @@ Yc = 2
 r = 1
 data_points =100
 
-#Circle
+#
 Input_Circle = np.zeros((data_points,3),float)
 Output_Circle = np.zeros((data_points,3),float)
 Single_input = np.zeros((1,3),float)
