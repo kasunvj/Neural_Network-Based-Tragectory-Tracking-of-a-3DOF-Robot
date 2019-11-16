@@ -1,3 +1,5 @@
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import random
 import math
 import csv
@@ -5,7 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import patches as mpatches
 from sklearn import preprocessing
-import tensorflow as tf
+#import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 import keras.backend as K
@@ -157,10 +159,10 @@ dataX_eva = x_scaler_eva.fit_transform(validate_input)
 dataY_eva = y_scaler_eva.fit_transform(validate_output)
 
 NAME = "Trajectry Tracking"
-tensorboard = TensorBoard(log_dir="logs/{}".format(NAME))           # Create    callbacks for tensorboard visualizations
+#tensorboard = TensorBoard(log_dir="logs/{}".format(NAME))           # Create    callbacks for tensorboard visualizations
 
 model =  build_model()                                              # Building the model
-history = model.fit(dataX,dataY, nb_epoch=100, callbacks=[tensorboard])    #train the model
+history = model.fit(dataX,dataY, nb_epoch=100)    #train the model
 [loss,mae] =model.evaluate(dataX_test,dataY_test,verbose=0)        #evaluation
 print("Testing set Mean Abs Error: ${:7.2f}".format(mae))
 
@@ -199,9 +201,9 @@ print("*********************************")
 
                                                                                 #inputs to the network - End efector positions(X and Y) and orientation
                                                                                 #Output - Joint angles (Q1,Q2,Q3)
-Xc = 3
-Yc = 2
-r = 1
+Xc = 2
+Yc = 3
+r = 1.5
 data_points =100
 
 #
